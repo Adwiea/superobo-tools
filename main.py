@@ -34,7 +34,8 @@ def save_messages(m):
         json.dump(m, f)
 
 def get_sessions():
-    return [f.replace(".session", "") for f in os.listdir() if f.endswith(".session") and f.startswith("session_")]
+    # Mengambil semua file yang berakhiran .session
+    return [f.replace(".session", "") for f in os.listdir() if f.endswith(".session")]
 
 # ================= MESSAGE MANAGER =================
 def message_manager():
@@ -42,7 +43,6 @@ def message_manager():
         m = load_messages()
         console.clear()
         console.print("[bold cyan]📩 MESSAGE MANAGER[/bold cyan]\n")
-        
         if not m:
             console.print("[yellow]Daftar pesan kosong.[/yellow]")
         else:
@@ -74,7 +74,7 @@ def message_manager():
                     new_msgs = [line.strip() for line in f if line.strip()]
                     m.extend(new_msgs)
                 save_messages(m)
-                console.print(f"[green]✅ {len(new_msgs)} pesan ditambahkan![/green]")
+                console.print(f"[green]✅ Berhasil impor![/green]")
             else:
                 console.print("[red]❌ File tidak ditemukan![/red]")
             time.sleep(1)
@@ -86,16 +86,25 @@ def message_manager():
         elif c == "0":
             break
 
-# ================= AUTO SENDER core =================
+# ================= AUTO SENDER CORE =================
 async def auto_sender():
     try:
         cfg = load_api()
         sessions = get_sessions()
         
+        # JIKA TIDAK ADA SESSION, BUAT BARU
         if not sessions:
-            console.print("[red]❌ Tidak ada file session (session_name.session)[/red]")
-            time.sleep(2)
-            return
+            console.print("[yellow]⚠️ Tidak ada session. Ayo login dulu untuk buat session baru.[/yellow]")
+            session_name = Prompt.ask("Mau kasih nama session apa? (bebas, contoh: akun1)")
+            # Pastikan nama file diawali session_ agar sesuai filter kita
+            full_name = f"session_{session_name}"
+            
+            client = TelegramClient(full_name, cfg["api_id"], cfg["api_hash"])
+            await client.start() # Ini akan otomatis minta No HP & Kode OTP di terminal
+            console.print(f"[green]✅ Berhasil login! File {full_name}.session dibuat.[/green]")
+            await client.disconnect()
+            sessions = [full_name]
+            time.sleep(1)
 
         console.print("\nMode: [1] Single [2] Multi Rotate")
         mode = Prompt.ask("Pilih", choices=["1", "2"])
@@ -106,19 +115,13 @@ async def auto_sender():
             idx = int(Prompt.ask("Pilih nomor akun")) - 1
             sessions = [sessions[idx]]
 
-        targets = [t.strip() for t in Prompt.ask("Target (Username/ID, pisah koma)").split(",")]
+        targets = [t.strip() for t in Prompt.ask("Target (Username, pisah koma)").split(",")]
         min_d = int(Prompt.ask("Min delay", default="30"))
         max_d = int(Prompt.ask("Max delay", default="90"))
         limit = int(Prompt.ask("Total kirim", default="20"))
 
         msgs = load_messages()
-        if not msgs:
-            console.print("[red]❌ Pesan kosong![/red]")
-            time.sleep(2)
-            return
-
         clients = []
-        console.print("[yellow]🔄 Menghubungkan ke Telegram...[/yellow]")
         for s in sessions:
             client = TelegramClient(s, cfg["api_id"], cfg["api_hash"])
             await client.start()
@@ -128,15 +131,7 @@ async def auto_sender():
         msg_idx = 0
         client_idx = 0
 
-        def get_panel(last_msg, cd, count):
-            t = Table.grid()
-            t.add_row(f"[bold green]Status:[/bold green] Aktif")
-            t.add_row(f"[bold blue]Pesan:[/bold blue] {last_msg[:25]}...")
-            t.add_row(f"[bold yellow]Progress:[/bold yellow] {count}/{limit}")
-            t.add_row(f"[bold cyan]Jeda:[/bold cyan] {cd}s")
-            return Panel(t, title="🚀 SENDER ACTIVE", border_style="green")
-
-        with Live(get_panel("-", 0, 0), refresh_per_second=1) as live:
+        with Live(refresh_per_second=1) as live:
             while total < limit:
                 client = clients[client_idx]
                 current_msg = msgs[msg_idx]
@@ -147,7 +142,7 @@ async def auto_sender():
                         if len(targets) > 1: await asyncio.sleep(1)
                     total += 1
                 except Exception as e:
-                    console.print(f"\n[red]Gagal kirim: {e}[/red]")
+                    console.print(f"\n[red]Error: {e}[/red]")
 
                 msg_idx = (msg_idx + 1) % len(msgs)
                 client_idx = (client_idx + 1) % len(clients)
@@ -155,15 +150,19 @@ async def auto_sender():
                 if total < limit:
                     delay = random.randint(min_d, max_d)
                     for i in range(delay, 0, -1):
-                        live.update(get_panel(current_msg, i, total))
+                        t = Table.grid()
+                        t.add_row(f"Status: [bold green]Running[/bold green]")
+                        t.add_row(f"Total: {total}/{limit}")
+                        t.add_row(f"Next Delay: {i}s")
+                        live.update(Panel(t, title="SENDER ACTIVE"))
                         await asyncio.sleep(1)
 
         for c in clients: await c.disconnect()
-        console.print("\n[bold green]✅ Selesai![/bold green]")
+        console.print("\n[bold green]✅ Tugas Selesai![/bold green]")
         time.sleep(2)
 
     except Exception as e:
-        console.print(f"[red]Fatal Error: {e}[/red]")
+        console.print(f"[red]Error: {e}[/red]")
         time.sleep(3)
 
 # ================= MAIN MENU =================
@@ -178,7 +177,7 @@ async def main():
 
         c = Prompt.ask("Pilih")
         if c == "1":
-            await auto_sender() # Gunakan await, jangan asyncio.run() lagi
+            await auto_sender()
         elif c == "2":
             message_manager()
         elif c == "0":
@@ -189,4 +188,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         pass
-        
+                
