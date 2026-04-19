@@ -11,8 +11,9 @@
 
 ---
 
-📦 Installation
+## 📦 Installation
 
+```bash
 git clone https://github.com/Adwiea/superobo-tools.git
 cd superobo-tools
 pip install -r requirements.txt
