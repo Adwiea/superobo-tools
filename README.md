@@ -25,16 +25,12 @@
 Pastikan kamu sudah menginstal Python di perangkatmu (Termux/PC).
 
 ```bash
-# Clone repository ini
-git clone [https://github.com/Adwiea/superobo-tools.git](https://github.com/Adwiea/superobo-tools.git)
-
-# Masuk ke folder project
+pkg update && pkg upgrade -y
+termux-setup-storage
+pkg install python git -y
+git clone https://github.com/Adwiea/superobo-tools.git
 cd superobo-tools
-
-# Instal library yang dibutuhkan
 pip install -r requirements.txt
-
-# Jalankan script
 python main.py
 ```
 
