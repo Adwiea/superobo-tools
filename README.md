@@ -17,8 +17,8 @@
 git clone https://github.com/Adwiea/superobo-tools.git
 cd superobo-tools
 pip install -r requirements.txt
-python main.py```
-
+python main.py
+```
 ---
 
 ⚙️ Setup
