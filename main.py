@@ -25,7 +25,7 @@ def load_messages():
     if os.path.exists("messages.json"):
         with open("messages.json", "r") as f:
             return json.load(f)
-    default = ["Halo ", "Lagi apa?", "Ngopi dulu "]
+    default = ["Halo 👋", "Lagi apa?", "Ngopi dulu ☕"]
     save_messages(default)
     return default
 
@@ -42,7 +42,7 @@ def message_manager():
     while True:
         m = load_messages() # Load ulang setiap loop supaya sinkron
         console.clear()
-        console.print("[bold cyan] MESSAGE MANAGER[/bold cyan]\n")
+        console.print("[bold cyan]📩 MESSAGE MANAGER[/bold cyan]\n")
         
         if not m:
             console.print("[yellow]Daftar pesan kosong.[/yellow]")
@@ -75,17 +75,17 @@ def message_manager():
                     new_msgs = [line.strip() for line in f if line.strip()]
                     m.extend(new_msgs)
                 save_messages(m)
-                console.print(f"[green] {len(new_msgs)} pesan ditambahkan![/green]")
+                console.print(f"[green]✅ {len(new_msgs)} pesan ditambahkan![/green]")
                 time.sleep(1.5)
             else:
-                console.print("[red] File tidak ditemukan![/red]")
+                console.print("[red]❌ File tidak ditemukan![/red]")
                 time.sleep(1.5)
         elif c == "5":
             confirm = Prompt.ask("Hapus semua pesan? (y/n)", choices=["y", "n"], default="n")
             if confirm == "y":
                 m = [] # Kosongkan list
                 save_messages(m) # Langsung simpan ke file
-                console.print("[red] Semua pesan telah dihapus![/red]")
+                console.print("[red]🗑️ Semua pesan telah dihapus![/red]")
                 time.sleep(1.5)
         elif c == "0":
             break
@@ -96,7 +96,7 @@ async def auto_sender():
     sessions = get_sessions()
     
     if not sessions:
-        console.print("[red] File session tidak ditemukan![/red]")
+        console.print("[red]❌ File session tidak ditemukan![/red]")
         return
 
     console.print("\nMode: [1] Single Account [2] Multi Account Rotate")
@@ -115,11 +115,11 @@ async def auto_sender():
 
     msgs = load_messages()
     if not msgs:
-        console.print("[red] Pesan kosong! Isi dulu di Message Manager.[/red]")
+        console.print("[red]❌ Pesan kosong! Isi dulu di Message Manager.[/red]")
         return
 
     clients = []
-    console.print("[yellow] Menyiapkan session...[/yellow]")
+    console.print("[yellow]🔄 Menyiapkan session...[/yellow]")
     for s in sessions:
         client = TelegramClient(s, cfg["api_id"], cfg["api_hash"])
         await client.start()
@@ -135,7 +135,7 @@ async def auto_sender():
         t.add_row(f"[bold blue]Pesan:[/bold blue] {last_msg[:30]}")
         t.add_row(f"[bold yellow]Progres:[/bold yellow] {count}/{limit}")
         t.add_row(f"[bold cyan]Jeda:[/bold cyan] {cd}s")
-        return Panel(t, title=" SUPEROBO SENDER", border_style="bright_magenta")
+        return Panel(t, title="🚀 SUPEROBO SENDER", border_style="bright_magenta")
 
     with Live(get_panel("-", 0, 0), refresh_per_second=1) as live:
         while total < limit:
@@ -159,14 +159,14 @@ async def auto_sender():
 
     for c in clients:
         await c.disconnect()
-    console.print("\n[bold green] Tugas Selesai![/bold green]")
+    console.print("\n[bold green]✅ Tugas Selesai![/bold green]")
     time.sleep(2)
 
 # ================= MAIN =================
 async def main():
     while True:
         console.clear()
-        table = Table(title=" SUPEROBO TOOLS V5.1", show_header=False)
+        table = Table(title="🚀 SUPEROBO TOOLS V5.1", show_header=False)
         table.add_row("[1] Auto Sender")
         table.add_row("[2] Message Manager")
         table.add_row("[0] Exit")
